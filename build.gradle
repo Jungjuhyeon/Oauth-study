@@ -24,12 +24,30 @@ repositories {
 }
 
 dependencies {
+	//springboot
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	//oauth2.0
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'com.auth0:java-jwt:4.4.0'
+
+	//redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+
+
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign', version: '3.1.1'
+	implementation 'io.github.openfeign:feign-jackson:12.1'
+
+	//lombok
 	annotationProcessor 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok'
+
+	//DB
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	//test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
