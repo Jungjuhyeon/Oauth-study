@@ -34,7 +34,7 @@ public class ErrorResponse extends ApiResponse{
     }
 
     private ErrorResponse(JwtException jwtException) {
-        super(false, jwtException.getErrorCode().getCode(), jwtException.getErrorCode().getMessage());
+        super(false, jwtException.getCode(), jwtException.getMessage());
     }
 
     public static ErrorResponse of(JwtException jwtException) {
