@@ -37,8 +37,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 
 
-	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign', version: '3.1.1'
-	implementation 'io.github.openfeign:feign-jackson:12.1'
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.1'
 
 	//lombok
 	annotationProcessor 'org.projectlombok:lombok'
