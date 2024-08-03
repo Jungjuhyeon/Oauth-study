@@ -37,7 +37,9 @@ public class JwtOIDCUtil {
         return decodedJWT.getHeaderClaim(KID).asString();
     }
 
-    //Header, Payload, Signature 를 분리하고 검증한다.
+    /**
+     * Header, Payload, Signature 를 분리하고 검증한다.
+     */
     private String getUnsignedToken(String token) {
         String[] splitToken = token.split("\\.");
         if (splitToken.length != 3) throw new BusinessException(JWT_BAD);
@@ -45,28 +47,28 @@ public class JwtOIDCUtil {
     }
 
 
-    // JwtOIDCProvider
+    /**
+     *  iss와 aud의 검증
+     */
     private DecodedJWT getUnsignedTokenClaims(String token, String iss, String aud) {
         try {
             DecodedJWT decodedJWT = JWT.decode(getUnsignedToken(token));
             if (!decodedJWT.getAudience().contains(aud)) {
-                log.error("[2]");
                 throw new BusinessException(JWT_INVALID);
             }
             if (!decodedJWT.getIssuer().equals(iss)) {
-                log.error("[3]");
                 throw new BusinessException(JWT_INVALID);
             }
             return decodedJWT;
         } catch (JWTDecodeException e) {
-
             throw new BusinessException(JWT_BAD);
         }
     }
-
+    /**
+     *  JWT 디코딩후 OIDC Body에 들어있는 정보를 가져오는 메소드
+     */
     public OIDCDecodePayload getOIDCTokenBody(String token, String modulus, String exponent) {
         DecodedJWT decodedJWT = getOIDCTokenJws(token, modulus, exponent);
-//        System.out.println(decodedJWT.getClaim("nickname").asString());
         return new OIDCDecodePayload(
                 decodedJWT.getIssuer(),
                 decodedJWT.getAudience().get(0),
@@ -74,6 +76,11 @@ public class JwtOIDCUtil {
                 decodedJWT.getClaim("nickname").asString(),
                 decodedJWT.getClaim("email").asString());
     }
+
+    /**
+     * 서명 검증을 포함하여 JWT를 검증
+     */
+
     public DecodedJWT getOIDCTokenJws(String token, String modulus, String exponent) {
         try {
             Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) getRSAPublicKey(modulus, exponent), null);
@@ -85,6 +92,10 @@ public class JwtOIDCUtil {
             throw new BusinessException(JWT_BAD);
         }
     }
+
+    /**
+     * Base64로 인코딩된 RSA 공개 키 모듈러스와 지수를 사용하여 RSAPublicKey 객체를 생성
+     */
 
     private Key getRSAPublicKey(String modulus, String exponent)
             throws NoSuchAlgorithmException, InvalidKeySpecException {

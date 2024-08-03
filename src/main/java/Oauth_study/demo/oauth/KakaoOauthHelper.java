@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class KakaoOauthHelper {
     private final OAuthOIDCHelper oauthOIDCHelper;
-//    private final OauthProperties oauthProperties;
     private final KakaoOauthClient kakaoOauthClient;
 
 //    @Value("${https://kauth.kakao.com}")

@@ -1,6 +1,7 @@
 package Oauth_study.demo.jwt.handler;
 
 
+import Oauth_study.demo.global.exception.errorcode.CommonErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,14 +9,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import Oauth_study.demo.jwt.JwtException;
 
 import java.io.IOException;
+import java.util.Objects;
+
+import static Oauth_study.demo.jwt.filter.JwtAuthenticationFilter.setErrorResponse;
 
 @Slf4j
 
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    /***
+     * 인증이 실패했을 때 거쳐가는 클래스
+     */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         String exception = (String) request.getAttribute("exception");
@@ -26,13 +32,23 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
          */
         if (exception == null) {
             log.info("[NULL TOKEN]");
-            JwtException.JWT_EMPTY.setResponse(response); // 토큰이 없음
-            return;
+            setErrorResponse(response,CommonErrorCode.JWT_EMPTY);
+        }
+        /**
+         * 토큰 만료된 경우
+         */
+        if (Objects.equals(exception, CommonErrorCode.JWT_EXPIRED.getMessage())) {
+            log.info("[EXPIRED TOKEN]");
+            setErrorResponse(response,CommonErrorCode.JWT_EXPIRED);
         }
 
-        else if ("로그아웃 되었습니다. 재 로그인하세요.".equals(exception)){
-            log.info("[LOGOUT TOKEN]");
-            JwtException.JWT_INVALID.setResponse(response);
+        /**
+         * 만료를 제외한 정상적이지 않은 토큰이 들어온 경우
+         */
+        if (Objects.equals(exception, CommonErrorCode.JWT_BAD.getMessage())) {
+            log.info("[BAD TOKEN]");
+            setErrorResponse(response,CommonErrorCode.JWT_BAD);
         }
+
     }
 }

@@ -9,6 +9,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Base64;
 import java.util.Date;
@@ -32,11 +35,9 @@ public class JwtUtil {
     // 토큰 유효시간 30분
     public static final long TOKEN_VALID_TIME = 1000L * 60 * 5 ; // 5분(밀리초)
     public static final long REFRESH_TOKEN_VALID_TIME = 1000L * 60 * 60 * 144; // 일주일(밀리초)
-    public static final long REFRESH_TOKEN_VALID_TIME_IN_REDIS = 60 * 60 * 24 * 7; // 일주일 (초)
-
     private static final String ACCESS_TOKEN_SUBJECT = "AccessToken";
     private static final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
-    private static final String EMAIL_CLAIM = "email";
+    private static final String EMAIL_CLAIM = "id";
     private static final String ROLE_CLAIM = "roles";
 
     private final LoginService loginService;
@@ -60,24 +61,30 @@ public class JwtUtil {
     }
 
     // JWT refresh 토큰 생성
-    public String createRefreshToken() {
+    public String createRefreshToken(Long id) {
         Date now = new Date();
         return JWT.create()
                 .withSubject(REFRESH_TOKEN_SUBJECT)
                 .withExpiresAt(new Date(System.currentTimeMillis()+ REFRESH_TOKEN_VALID_TIME))
                 .withIssuedAt(new Date(System.currentTimeMillis()))// 토큰 발행 시간 정보
+                .withClaim(EMAIL_CLAIM, id)
                 .sign(Algorithm.HMAC512(secretKey));
     }
+
+    //헤더에서 토큰 추출
+    public String resolveToken(String token) {
+        if (token != null) {
+            return token.substring("Bearer ".length());
+        } else {
+            return "";
+        }    }
+
     //토큰 파싱
     // 토큰에서 클레임 추출
     private DecodedJWT extractAllClaims(String token) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC512(secretKey);
-            JWTVerifier verifier = JWT.require(algorithm).build();
-            return verifier.verify(token);
-        } catch (JWTVerificationException e) {
-            throw new RuntimeException("Invalid JWT token", e);
-        }
+        Algorithm algorithm = Algorithm.HMAC512(secretKey);
+        JWTVerifier verifier = JWT.require(algorithm).build();
+        return verifier.verify(token);
     }
 
     // 토큰에서 id 추출
@@ -97,6 +104,15 @@ public class JwtUtil {
         JWT.require(Algorithm.HMAC512(secretKey)).build().verify(token);
     }
 
+    /***
+     * @param token : 요청이 들어온 토큰
+     * @return : 토큰의 유효기간이 얼마나 남았는지 리턴
+     */
+    public Long getExpiration(String token) {
+        DecodedJWT decodedJWT = extractAllClaims(token);
+        long now = System.currentTimeMillis();
+        return decodedJWT.getExpiresAt().getTime() - now;
+    }
 
 
 }

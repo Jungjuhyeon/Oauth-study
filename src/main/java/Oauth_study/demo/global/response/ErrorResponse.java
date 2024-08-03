@@ -1,7 +1,6 @@
 package Oauth_study.demo.global.response;
 
 import Oauth_study.demo.global.exception.errorcode.ErrorCode;
-import Oauth_study.demo.jwt.JwtException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,14 +30,6 @@ public class ErrorResponse extends ApiResponse{
 
     public static ErrorResponse of(ErrorCode errorCode, String message){
         return new ErrorResponse(errorCode, message);
-    }
-
-    private ErrorResponse(JwtException jwtException) {
-        super(false, jwtException.getCode(), jwtException.getMessage());
-    }
-
-    public static ErrorResponse of(JwtException jwtException) {
-        return new ErrorResponse(jwtException);
     }
 
 

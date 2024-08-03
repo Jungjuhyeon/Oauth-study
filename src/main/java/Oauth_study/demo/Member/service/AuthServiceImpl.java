@@ -4,6 +4,8 @@ import Oauth_study.demo.Member.Member;
 import Oauth_study.demo.Member.Role;
 import Oauth_study.demo.Member.dto.MemberDto;
 import Oauth_study.demo.Member.repository.MemberRepository;
+import Oauth_study.demo.config.redis.util.RedisUtil;
+import Oauth_study.demo.global.exception.BusinessException;
 import Oauth_study.demo.jwt.util.JwtUtil;
 import Oauth_study.demo.oauth.KakaoOauthHelper;
 import Oauth_study.demo.oauth.OauthInfo;
@@ -16,6 +18,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static Oauth_study.demo.global.exception.errorcode.CommonErrorCode.*;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -23,7 +27,12 @@ public class AuthServiceImpl implements AuthService{
     private final MemberRepository memberRepository;
     private final KakaoOauthHelper kakaoOauthHelper;
     private final JwtUtil jwtUtil;
-//    private final Aut\
+    private final RedisUtil redisUtil;
+    private static final String RT = "RT:";
+    private static final String LOGOUT = "LOGOUT:";
+    private static final String ROLE_USER = "ROLE_USER";
+
+
 
 
     @Override
@@ -31,21 +40,59 @@ public class AuthServiceImpl implements AuthService{
         OauthInfo oauthInfo = kakaoOauthHelper.getOauthInfoByToken(idToken);
         Member member = memberRepository.findByOauthInfoOid(oauthInfo.getOid()).orElseGet(()-> forceJoin(oauthInfo));
 
-//        String refreshToken = redisUtil.getData(RT + findMember.getId());
-//        if (refreshToken == null) {
-//            refreshToken = jwtUtil.createToken(findMember.getId().toString(), TokenType.REFRESH_TOKEN);
-//            redisUtil.setData(RT + findMember.getId(), refreshToken, jwtUtil.getExpiration(TokenType.REFRESH_TOKEN));
-//        }
         return MemberDto.Response.SignIn.of(
-                jwtUtil.createAccessToken(member.getId(), "ROLE_USER"),
-                member.getOauthInfo().getNickname());
+                jwtUtil.createAccessToken(member.getId(), ROLE_USER),
+                getOrGenerateRefreshToken(member)
+                ,member.getOauthInfo().getNickname());
 
     }
+
+    @Override
+    public MemberDto.Response.Reissue reissue(String refreshToken){
+        String resolveToken = jwtUtil.resolveToken(refreshToken);
+        Long userIdInToken = jwtUtil.getIdFromToken(resolveToken);
+
+        String refreshTokenInRedis = redisUtil.getData(RT+userIdInToken);
+
+        if(!resolveToken.equals(refreshTokenInRedis)){
+            throw new BusinessException(JWT_REFRESHTOKEN_NOT_MATCH);
+        }
+
+        String newRefreshToken =jwtUtil.createRefreshToken(userIdInToken);
+        String newAccessToken = jwtUtil.createAccessToken(userIdInToken, ROLE_USER);
+        redisUtil.setData(RT+userIdInToken,newRefreshToken,jwtUtil.REFRESH_TOKEN_VALID_TIME);
+
+        return MemberDto.Response.Reissue.of(newRefreshToken,newAccessToken);
+    }
+
+    @Override
+    public void logout(String accessToken){
+        String resolveToken = jwtUtil.resolveToken(accessToken);
+        Long userIdInToken = jwtUtil.getIdFromToken(resolveToken);
+        String refreshTokenInRedis = redisUtil.getData(RT+userIdInToken);
+
+        if (refreshTokenInRedis == null) throw new BusinessException(REFRESH_TOKEN_NOT_FOUND);
+
+        redisUtil.deleteDate(RT+ userIdInToken);
+        redisUtil.setData(LOGOUT+resolveToken, LOGOUT, jwtUtil.getExpiration(resolveToken));// 블랙리스트 처리
+    }
+
+
 
     @Override
     public Member forceJoin(OauthInfo oauthInfo) {
         Member newMember = Member.create(oauthInfo);
         return memberRepository.save(newMember);
+    }
+
+    private String getOrGenerateRefreshToken(Member member){
+        String refreshToken = redisUtil.getData(RT + member.getId());
+
+        if (refreshToken == null) {
+            refreshToken = jwtUtil.createRefreshToken(member.getId());
+            redisUtil.setData(RT + member.getId(), refreshToken, jwtUtil.REFRESH_TOKEN_VALID_TIME);
+        }
+        return refreshToken;
     }
 
 
@@ -103,3 +150,4 @@ public class AuthServiceImpl implements AuthService{
         }
     }
 }
+

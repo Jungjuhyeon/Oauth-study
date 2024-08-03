@@ -1,9 +1,14 @@
 package Oauth_study.demo.jwt.filter;
 
-import Oauth_study.demo.jwt.JwtException;
+import Oauth_study.demo.config.redis.util.RedisUtil;
+import Oauth_study.demo.global.exception.errorcode.CommonErrorCode;
+import Oauth_study.demo.global.response.ApiResponse;
+import Oauth_study.demo.global.response.ErrorResponse;
 import Oauth_study.demo.jwt.util.JwtUtil;
+import ch.qos.logback.core.status.ErrorStatus;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -20,29 +24,37 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String EXCEPTION = "exception";
+
     private final JwtUtil jwtUtil;
+    private final RedisUtil redisUtil;
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws IOException, ServletException {
-        String token = resolveToken(request);
-
-        if (token != null) {
+        String token = jwtUtil.resolveToken(request.getHeader("Authorization"));
+        if (token != null && !token.isEmpty()) {
             try {
-                jwtUtil.isTokenValid(token);
-                //블랙리스트 처리 x
-                Authentication authentication = jwtUtil.getAuthentication(token);
+//                if (request.getRequestURI().equals("/api/v1/auth/reissue")) {
+//                    filterChain.doFilter(request, response);
+//                    return;
+//                }
+                String logout = redisUtil.getData("LOGOUT:"+token);
+                System.out.println(logout);
 
+                if(logout != null){ //블랙리스트 처리 로직
+                    request.setAttribute(EXCEPTION, CommonErrorCode.LOGOUT_MEMBER.getMessage());
+                    setErrorResponse(response,CommonErrorCode.LOGOUT_MEMBER);
+                    return;
+                }
+                Authentication authentication = jwtUtil.getAuthentication(token); //토큰 파싱시 예외처리가 실행됨.
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }catch (TokenExpiredException e) {
-                //토큰의 유효기간 만료
                 log.error("만료된 토큰입니다");
-                JwtException.JWT_EXPIRED.setResponse(response);
-                return;
+                request.setAttribute(EXCEPTION, CommonErrorCode.JWT_EXPIRED.getMessage());
             }catch (JWTVerificationException e){
                 log.error("유효하지 않은 토큰입니다");
-                JwtException.JWT_INVALID.setResponse(response);
+                request.setAttribute(EXCEPTION, CommonErrorCode.JWT_BAD.getMessage());
 
             }
 
@@ -51,15 +63,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     }
 
-    // Request Header 에서 토큰 정보를 꺼내오기 위한 메소드
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    //jwt 예외처리 응답로직
+    public static void setErrorResponse(HttpServletResponse response, CommonErrorCode errorCode) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(errorCode.getHttpStatus().value());
+        ObjectMapper objectMapper = new ObjectMapper();
 
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
+        ApiResponse apiResponse = ErrorResponse.of(errorCode);
+        String s = objectMapper.writeValueAsString(apiResponse);
 
-        return null;
+        response.getWriter().write(s);
     }
 
 }
