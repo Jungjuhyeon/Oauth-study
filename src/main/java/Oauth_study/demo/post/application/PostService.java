@@ -11,9 +11,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +28,10 @@ public class PostService {
     public PostDto.Response.PostView postView(Long viewId) {
         Post post = postJpaRepository.findById(viewId).orElseThrow();
         post.upView();
-        postJpaRepository.save(post);
         return PostDto.Response.PostView.of(post.getView());
     }
 
+    @DistributedLock(value = "view:#viewId")
     public PostDto.Response.PostView postView2(Long viewId) {
 
         // Redis에서 조회수 가져오기
@@ -42,6 +40,7 @@ public class PostService {
         if (check == null) {
             // 분산 락을 걸고 DB 조회 및 Redis 저장을 처리
             return handleViewWithLock(viewId);
+
         }
 
         // Redis 조회수 증가
@@ -52,7 +51,6 @@ public class PostService {
     }
 
     @Transactional
-    @DistributedLock(value = "view:#viewId")
     public PostDto.Response.PostView handleViewWithLock(Long viewId) {
         // DB에서 게시글 조회
         Post post = postJpaRepository.findById(viewId).orElseThrow();
@@ -65,9 +63,6 @@ public class PostService {
         return PostDto.Response.PostView.of(currentView + 1);
     }
 
-
-
-    @Transactional
     public List<PostDto.Response.PostTop5View> postViewTop5() {
         // 1. Redis에서 상위 5개의 value와 score 가져오기
         List<ZSetOperations.TypedTuple<Object>> topNValuesWithScores = redisVIewUtil.getTopNValuesWithScore(VIEW, 0, 4);
@@ -85,8 +80,20 @@ public class PostService {
                 .toList();
 
         return postTop5Views;
-
     }
+
+    public List<PostDto.Response.PostTop5View> postViewTop5_1(){
+        List<Post> postList = postJpaRepository.findTop10ByOrderByViewDesc();
+
+        List<PostDto.Response.PostTop5View> postTop10Views = postList.stream()
+                .map(o -> {
+                    return PostDto.Response.PostTop5View.of(o.getId(), o.getView(), o.getTitle()); // DTO 변환
+                })
+                .toList();
+
+        return postTop10Views;
+    }
+
 
 
     @Transactional

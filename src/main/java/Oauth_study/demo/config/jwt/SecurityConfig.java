@@ -27,13 +27,13 @@ public class SecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .httpBasic(AbstractHttpConfigurer::disable)  // 인증을 UI로 할 것이 아니라서 disable을 한 것
-                .csrf(AbstractHttpConfigurer::disable) // CSRF도 같음
+                .csrf(AbstractHttpConfigurer::disable) // 토큰을 위조하는 것을 방지하기 위함. 하지만 restful api에선 필요 업음.
                 .cors(AbstractHttpConfigurer::disable) // CORS 삭젯
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/auth/login/kakao").permitAll()
                         .requestMatchers("/api/v1/auth/kakao").permitAll()
-
+                        .requestMatchers("/api/v1/auth/kakao-login").permitAll()
                         .requestMatchers("/api/v1/auth/**").hasAnyRole("USER")
 
                         .requestMatchers("**").permitAll()

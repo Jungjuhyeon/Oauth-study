@@ -39,7 +39,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //                    return;
 //                }
                 String logout = redisUtil.getData("LOGOUT:"+token);
-                System.out.println(logout);
 
                 if(logout != null){ //블랙리스트 처리 로직
                     request.setAttribute(EXCEPTION, CommonErrorCode.LOGOUT_MEMBER.getMessage());

@@ -29,11 +29,19 @@ public class PostController {
         return SuccessResponse.success(response);
     }
 
+    @GetMapping("/v1/viewTop5")
+    public SuccessResponse<List<PostDto.Response.PostTop5View>> postViewTop5_1(){
+        List<PostDto.Response.PostTop5View> response = postService.postViewTop5_1();
+        return SuccessResponse.success(response);
+    }
+
+
     @GetMapping("/v2/viewTop5")
     public SuccessResponse<List<PostDto.Response.PostTop5View>> postViewTop5(){
         List<PostDto.Response.PostTop5View> response = postService.postViewTop5();
         return SuccessResponse.success(response);
     }
+
 
     @PatchMapping("/v2/udpate")
     public SuccessResponse<String> postViewUpdate(){

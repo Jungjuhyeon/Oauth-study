@@ -4,6 +4,7 @@ import Oauth_study.demo.member.dto.MemberDto;
 import Oauth_study.demo.member.application.MemberService;
 import Oauth_study.demo.global.response.SuccessResponse;
 import lombok.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,6 +13,18 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+
+    //code로 idtoken 가져오기
+    @GetMapping("/kakao-login")
+    public SuccessResponse<MemberDto.Response.SignIn> codelogin(@RequestParam final String code){
+        // Step 1: code로 idToken 가져오기
+        String idToken = memberService.code(code);
+        // Step 2: idToken으로 로그인 처리
+        MemberDto.Response.SignIn response = memberService.login(idToken);
+        return SuccessResponse.success(response);
+
+    }
+
 
     //로그인
     @GetMapping("/login/kakao")
@@ -33,18 +46,9 @@ public class MemberController {
         return SuccessResponse.success("로그아웃 성공");
     }
 
-    /**
-     * 카카오 callback
-     * [GET] /oauth/kakao/callback
-     */
-    @GetMapping("/kakao")
-    public void kakaoCallback(@RequestParam String code) {
-        memberService.getToken(code);
-//        System.out.println(code);
-    }
-
-    @PostMapping("/test")
-    public void test(){
-        System.out.println("Gg");
+    @GetMapping("/test")
+    public void test(@AuthenticationPrincipal Long userId){
+        System.out.println("ji");
+        System.out.println(userId);
     }
 }
