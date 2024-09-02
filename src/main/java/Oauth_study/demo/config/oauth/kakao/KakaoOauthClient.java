@@ -1,4 +1,4 @@
-package Oauth_study.demo.config.oauth;
+package Oauth_study.demo.config.oauth.kakao;
 
 import Oauth_study.demo.config.oauth.dto.OIDCPublicKeysResponse;
 import org.springframework.cloud.openfeign.FeignClient;

@@ -12,16 +12,32 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 public class OauthConfig {
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
-    private String clientId;
+    private String kakaoClientId;
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
-    private String redirectUri;
+    private String kakaoRedirectUri;
 
     @Value("${spring.security.oauth2.client.provider.kakao.token-uri}")
-    private String tokenUrl;
+    private String kakaoTokenUrl;
 
+
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String googleClientId;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    private String googleClientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
+    private String googleRedirectUri;
+
+    @Value("${spring.security.oauth2.client.provider.google.token-uri}")
+    private String googleTokenUrl;
     @Bean
-    public OauthClient kakaoOauthClient() {
-        return new OauthClient(clientId, redirectUri, tokenUrl);
+    public KakaoOauthClient kakaoOauthClient() {
+        return new KakaoOauthClient(kakaoClientId, kakaoRedirectUri, kakaoTokenUrl);
+    }
+    @Bean
+    public GoogleOauthClient googleOauthClient() {
+        return new GoogleOauthClient(googleClientId, googleClientSecret, googleRedirectUri, googleTokenUrl);
     }
 }

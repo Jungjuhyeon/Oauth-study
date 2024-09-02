@@ -1,23 +1,19 @@
 package Oauth_study.demo.member.application;
 
+import Oauth_study.demo.config.oauth.google.GoogleOauthHelper;
 import Oauth_study.demo.member.domain.Member;
 import Oauth_study.demo.member.dto.MemberDto;
 import Oauth_study.demo.config.redis.util.RedisUtil;
 import Oauth_study.demo.global.exception.BusinessException;
 import Oauth_study.demo.config.jwt.util.JwtUtil;
-import Oauth_study.demo.config.oauth.KakaoOauthHelper;
+import Oauth_study.demo.config.oauth.kakao.KakaoOauthHelper;
 import Oauth_study.demo.config.oauth.OauthInfo;
-import Oauth_study.demo.member.web.OauthClient;
+import Oauth_study.demo.member.web.GoogleOauthClient;
+import Oauth_study.demo.member.web.KakaoOauthClient;
 import Oauth_study.demo.member.web.dto.TokenRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import static Oauth_study.demo.global.exception.errorcode.CommonErrorCode.*;
 
@@ -29,20 +25,32 @@ public class MemberService {
     private final KakaoOauthHelper kakaoOauthHelper;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
-    private final OauthClient oauthClient;
+    private final KakaoOauthClient kakaoOauthClient;
+    private final GoogleOauthClient googleOauthClient;
+    private final GoogleOauthHelper googleOauthHelper;
     private static final String RT = "RT:";
     private static final String LOGOUT = "LOGOUT:";
     private static final String ROLE_USER = "ROLE_USER";
 
     public String code(String code){
-        TokenRequest tokenRequest = oauthClient.of(code);
-        String idToken = oauthClient.getIdToken(tokenRequest);
+        TokenRequest tokenRequest = kakaoOauthClient.of(code);
+        String idToken = kakaoOauthClient.getIdToken(tokenRequest);
 
         return idToken;
     }
+
+    public String googlecode(String code){
+        TokenRequest tokenRequest = googleOauthClient.of(code);
+        return googleOauthClient.getIdToken(tokenRequest);
+    }
     @Transactional
-    public MemberDto.Response.SignIn login(String idToken){
-        OauthInfo oauthInfo = kakaoOauthHelper.getOauthInfoByToken(idToken);
+    public MemberDto.Response.SignIn login(String idToken,String type){
+        OauthInfo oauthInfo;
+        if(type.equals("kakao")){
+            oauthInfo = kakaoOauthHelper.getOauthInfoByToken(idToken);
+        }else{
+            oauthInfo = googleOauthHelper.getOauthInfoByToken(idToken);
+        }
         Member member = memberRepository.findByOauthInfoOid(oauthInfo.getOid(),oauthInfo);
 
         return MemberDto.Response.SignIn.of(
@@ -50,6 +58,7 @@ public class MemberService {
                 getOrGenerateRefreshToken(member)
                 ,member.getOauthInfo().getNickname());
     }
+
 
     @Transactional
     public MemberDto.Response.Reissue reissue(String refreshToken){

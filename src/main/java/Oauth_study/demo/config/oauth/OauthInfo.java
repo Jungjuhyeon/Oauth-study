@@ -20,10 +20,13 @@ public class OauthInfo {
 
     private String nickname;
 
+    private String email;
+
     @Builder
-    public OauthInfo(SocialType socialType, String oid, String nickname){
+    public OauthInfo(SocialType socialType, String oid, String nickname,String email){
         this.socialType =socialType;
         this.oid =oid;
         this.nickname = nickname;
+        this.email = email;
     }
 }

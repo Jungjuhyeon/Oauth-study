@@ -34,6 +34,9 @@ public class SecurityConfig{
                         .requestMatchers("/api/v1/auth/login/kakao").permitAll()
                         .requestMatchers("/api/v1/auth/kakao").permitAll()
                         .requestMatchers("/api/v1/auth/kakao-login").permitAll()
+                        .requestMatchers("/api/v1/auth/google-login").permitAll()
+                        .requestMatchers("/api/v1/auth/google").permitAll()
+                        .requestMatchers("/api/v1/auth/kakao").permitAll()
                         .requestMatchers("/api/v1/auth/**").hasAnyRole("USER")
 
                         .requestMatchers("**").permitAll()

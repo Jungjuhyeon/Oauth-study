@@ -1,5 +1,7 @@
-package Oauth_study.demo.config.oauth;
+package Oauth_study.demo.config.oauth.kakao;
 
+import Oauth_study.demo.config.oauth.OAuthOIDCHelper;
+import Oauth_study.demo.config.oauth.OauthInfo;
 import Oauth_study.demo.config.oauth.dto.OIDCDecodePayload;
 import Oauth_study.demo.config.oauth.dto.OIDCPublicKeysResponse;
 import Oauth_study.demo.member.domain.Enum.SocialType;
@@ -37,6 +39,7 @@ public class KakaoOauthHelper {
                 .socialType(SocialType.KAKAO)
                 .oid(oidcDecodePayload.getSub())
                 .nickname(oidcDecodePayload.getNickname())
+                .email(oidcDecodePayload.getEmail())
                 .build();
     }
 

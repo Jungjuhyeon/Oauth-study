@@ -5,9 +5,9 @@ import lombok.*;
 @Getter
 @AllArgsConstructor
 public class OIDCDecodePayload {
-    private String iss;
-    private String aud;
-    private String sub;
+    private String iss; //카카오 인증 서버에서 발행한 토큰
+    private String aud; //애플리케이션 식별자
+    private String sub; //사용자 고유식별자
     private String nickname;
     private String email;
 //    private String picture;
