@@ -10,5 +10,6 @@ public class OIDCDecodePayload {
     private String sub; //사용자 고유식별자
     private String nickname;
     private String email;
+    private String name;
 //    private String picture;
 }

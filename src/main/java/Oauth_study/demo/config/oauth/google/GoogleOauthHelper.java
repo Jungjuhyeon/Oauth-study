@@ -38,7 +38,7 @@ public class GoogleOauthHelper {
         return OauthInfo.builder()
                 .socialType(SocialType.GOOGLE)
                 .oid(oidcDecodePayload.getSub())
-                .nickname(oidcDecodePayload.getNickname())  // 구글에서는 이름이 닉네임으로 사용될 수 있습니다.
+                .nickname(oidcDecodePayload.getName())  // 구글에서는 이름이 닉네임으로 사용될 수 있습니다.
                 .email(oidcDecodePayload.getEmail())
                 .build();
     }

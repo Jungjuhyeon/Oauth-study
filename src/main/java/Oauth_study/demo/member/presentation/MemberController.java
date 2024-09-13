@@ -21,51 +21,26 @@ import java.util.Base64;
 public class MemberController {
 
     private final MemberService memberService;
-    private final OauthConfig oauthConfig;
-
-    @GetMapping("/kakao")
-    public void initiateKakaoLogin(HttpServletResponse response) throws IOException {
-        String authUrl = "https://kauth.kakao.com/oauth/authorize?" +
-                "client_id=" + oauthConfig.getKakaoClientId() +
-                "&redirect_uri=" + oauthConfig.getKakaoRedirectUri() +
-                "&response_type=code";
-
-        log.info("Redirecting to Kakao OAuth2 URL: {}", authUrl);
-        response.sendRedirect(authUrl);
-    }
 
     @GetMapping("/kakao-login")
     public SuccessResponse<MemberDto.Response.SignIn> kakaoLogin(@RequestParam final String code){
         // Step 1: code로 idToken 가져오기
         String idToken = memberService.code(code);
+        System.out.println(idToken);
         // Step 2: idToken으로 로그인 처리
         MemberDto.Response.SignIn response = memberService.login(idToken,"kakao");
         return SuccessResponse.success(response);
 
     }
-    @GetMapping("/google")
-    public void initiateGoogleLogin(HttpServletResponse response) throws IOException {
-        String state = generateRandomState(); // 랜덤 state 값 생성
-
-        String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" +
-                "client_id=" + oauthConfig.getGoogleClientId() +
-                "&redirect_uri=" + oauthConfig.getGoogleRedirectUri() +
-                "&response_type=code" +
-                "&scope=openid%20email%20profile" +
-                "&state=" + state;
-
-        log.info("Redirecting to Google OAuth2 URL: {}", authUrl);
-        response.sendRedirect(authUrl);
-    }
     @GetMapping("/google-login")
     public SuccessResponse<MemberDto.Response.SignIn> googleLogin(@RequestParam final String code,
                                                                  @RequestParam String state){
         String idToken = memberService.googlecode(code);
+        log.info(" Kakao idToken : {}", idToken);
+
         MemberDto.Response.SignIn response = memberService.login(idToken,"google");
         return SuccessResponse.success(response);
-
     }
-
     //
     @PostMapping("/reissue")
     public SuccessResponse<MemberDto.Response.Reissue> reissue(@RequestHeader("Authorization") String refreshToken){
@@ -85,11 +60,4 @@ public class MemberController {
         System.out.println(userId);
     }
 
-    //랜던 값 생성
-    private String generateRandomState() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] state = new byte[16];
-        secureRandom.nextBytes(state);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(state);
-    }
 }

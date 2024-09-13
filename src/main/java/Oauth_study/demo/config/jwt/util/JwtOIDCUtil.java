@@ -74,6 +74,7 @@ public class JwtOIDCUtil {
                 decodedJWT.getAudience().get(0),
                 decodedJWT.getSubject(),
                 decodedJWT.getClaim("nickname").asString(),
+                decodedJWT.getClaim(" name").asString(),
                 decodedJWT.getClaim("email").asString());
     }
 
