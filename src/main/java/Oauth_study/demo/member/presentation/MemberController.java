@@ -3,16 +3,11 @@ package Oauth_study.demo.member.presentation;
 import Oauth_study.demo.member.dto.MemberDto;
 import Oauth_study.demo.member.application.MemberService;
 import Oauth_study.demo.global.response.SuccessResponse;
-import Oauth_study.demo.member.web.OauthConfig;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.security.SecureRandom;
-import java.util.Base64;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +20,7 @@ public class MemberController {
     @GetMapping("/kakao-login")
     public SuccessResponse<MemberDto.Response.SignIn> kakaoLogin(@RequestParam final String code){
         // Step 1: code로 idToken 가져오기
-        String idToken = memberService.code(code);
+        String idToken = memberService.kakaoCode(code);
         System.out.println(idToken);
         // Step 2: idToken으로 로그인 처리
         MemberDto.Response.SignIn response = memberService.login(idToken,"kakao");
@@ -35,7 +30,7 @@ public class MemberController {
     @GetMapping("/google-login")
     public SuccessResponse<MemberDto.Response.SignIn> googleLogin(@RequestParam final String code,
                                                                  @RequestParam String state){
-        String idToken = memberService.googlecode(code);
+        String idToken = memberService.googleCode(code);
         log.info(" Kakao idToken : {}", idToken);
 
         MemberDto.Response.SignIn response = memberService.login(idToken,"google");

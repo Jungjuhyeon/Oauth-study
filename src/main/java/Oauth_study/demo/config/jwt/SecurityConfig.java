@@ -22,7 +22,6 @@ public class SecurityConfig{
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http

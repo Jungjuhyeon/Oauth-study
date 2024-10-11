@@ -1,6 +1,7 @@
 package Oauth_study.demo.config.oauth.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @Getter
 @AllArgsConstructor

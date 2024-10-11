@@ -1,16 +1,14 @@
 package Oauth_study.demo.member.application;
 
-import Oauth_study.demo.config.oauth.google.GoogleOauthHelper;
+import Oauth_study.demo.config.oauth.client.Helper.GoogleOauthHelper;
+import Oauth_study.demo.config.oauth.client.Helper.KakaoOauthHelper;
 import Oauth_study.demo.member.domain.Member;
 import Oauth_study.demo.member.dto.MemberDto;
 import Oauth_study.demo.config.redis.util.RedisUtil;
 import Oauth_study.demo.global.exception.BusinessException;
 import Oauth_study.demo.config.jwt.util.JwtUtil;
-import Oauth_study.demo.config.oauth.kakao.KakaoOauthHelper;
 import Oauth_study.demo.config.oauth.OauthInfo;
-import Oauth_study.demo.member.web.GoogleOauthClient;
-import Oauth_study.demo.member.web.KakaoOauthClient;
-import Oauth_study.demo.member.web.dto.TokenRequest;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,25 +21,19 @@ import static Oauth_study.demo.global.exception.errorcode.CommonErrorCode.*;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final KakaoOauthHelper kakaoOauthHelper;
+    private final GoogleOauthHelper googleOauthHelper;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
-    private final KakaoOauthClient kakaoOauthClient;
-    private final GoogleOauthClient googleOauthClient;
-    private final GoogleOauthHelper googleOauthHelper;
     private static final String RT = "RT:";
     private static final String LOGOUT = "LOGOUT:";
     private static final String ROLE_USER = "ROLE_USER";
 
-    public String code(String code){
-        TokenRequest tokenRequest = kakaoOauthClient.of(code);
-        String idToken = kakaoOauthClient.getIdToken(tokenRequest);
-
-        return idToken;
+    public String kakaoCode(String code){
+        return kakaoOauthHelper.getKakaoIdToken(code);
     }
 
-    public String googlecode(String code){
-        TokenRequest tokenRequest = googleOauthClient.of(code);
-        return googleOauthClient.getIdToken(tokenRequest);
+    public String googleCode(String code){
+        return googleOauthHelper.getGoogleIdToken(code);
     }
     @Transactional
     public MemberDto.Response.SignIn login(String idToken,String type){

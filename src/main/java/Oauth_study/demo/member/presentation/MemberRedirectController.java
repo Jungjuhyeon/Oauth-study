@@ -1,6 +1,6 @@
 package Oauth_study.demo.member.presentation;
 
-import Oauth_study.demo.member.web.OauthConfig;
+import Oauth_study.demo.config.oauth.OauthConfig;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
